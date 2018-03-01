@@ -66,6 +66,8 @@ public class PostMessageActivity extends AppCompatActivity {
     Button send;
     Button attachment;
 
+    String profurl;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -91,13 +93,13 @@ public class PostMessageActivity extends AppCompatActivity {
                 emailBody = ((TextView) findViewById(R.id.bodyInput))
                         .getText().toString();
 
-                String profileurl;
-                //SET URL to get profile based on account type
-                if(getAccountType() ==  "gmail"){
-                    profileurl = "https://www.googleapis.com/gmail/v1/users/me/profile";
+                //URL to get user email account
+                if (getAccountType() == "gmail"){
+                    //profurl = "https://graph.microsoft.com/v1.0/me/";}
+                    profurl = "https://www.googleapis.com/gmail/v1/users/me/profile";
                 }
-                else if(getAccountType() ==  "outlook"){
-                    profileurl = "https://www.googleapis.com/gmail/v1/users/me/profile";
+                else{
+                    profurl = "https://apis.live.net/v5.0/me";
                 }
 
                 //GET OWN AUTHORIZED EMAIL ADDRESS
@@ -110,7 +112,7 @@ public class PostMessageActivity extends AppCompatActivity {
                             protected JSONObject doInBackground(String... tokens) {
                                 OkHttpClient client = new OkHttpClient();
                                 Request request = new Request.Builder()
-                                        .url("https://www.googleapis.com/gmail/v1/users/me/profile") //Get own email address
+                                        .url(profurl) //Get own email address
                                         .addHeader("Authorization", String.format("Bearer %s", tokens[0]))
                                         .build();
 

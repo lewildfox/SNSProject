@@ -61,6 +61,8 @@ public class LoginActivity extends AppCompatActivity {
     TextView userDisplayName;
     ImageView userProfPic;
 
+    String profurl;
+
 
 
     @Override
@@ -210,14 +212,20 @@ public class LoginActivity extends AppCompatActivity {
 
     //OUTLOOK LOGIN BUTTON LISTENER
     public void performAuthorizationOutlook (View v){
-        String scp[] = {"https://graph.microsoft.com/User.Read", "https://graph.microsoft.com/Mail.ReadWrite"};
+        //String scp[] = {"https://graph.microsoft.com/User.Read", "https://graph.microsoft.com/Mail.ReadWrite"};
+        //String scp[] = {"openid","profile", "email", "wl.imap","wl.offline_access", "https://outlook.office.com/User.Read","https://outlook.office.com/Mail.ReadWrite","https://outlook.office.com/Mail.Send"};
+       String scp[] = {"openid", "profile", "email", "wl.imap", "wl.offline_access", "wl.emails"};
+       // String scp[] = {"wl.basic", "wl.imap","wl.offline_access", "wl.emails"};
+        //String scp[] = {"wl.imap","wl.offline_access"};
         Iterable<String> scopesoutlook = Arrays.asList(scp);
 
         performAuthorizationTask(
                 v,
                 "outlook",
-                "https://login.microsoftonline.com/common/oauth2/v2.0/authorize",
-                "https://login.microsoftonline.com/common/oauth2/v2.0/token",
+                //"https://login.microsoftonline.com/common/oauth2/v2.0/authorize",
+                "https://login.live.com/oauth20_authorize.srf",
+                //"https://login.microsoftonline.com/common/oauth2/v2.0/token",
+                "https://login.live.com/oauth20_token.srf",
                 "b3a96c63-e850-4eac-9be7-77581148f182",
                 "com.sns.socialmail://oauth2callback",
                 scopesoutlook
@@ -377,69 +385,101 @@ public class LoginActivity extends AppCompatActivity {
         AuthorizationService mAuthorizationService = new AuthorizationService(this);
         final Context ctx = LoginActivity.this;
 
-        mAuthState.performActionWithFreshTokens(mAuthorizationService, new AuthState.AuthStateAction(){
 
-            @Override
-            public void execute(@Nullable String accessToken, @Nullable String idToken, @Nullable AuthorizationException exception) {
-                new AsyncTask<String, Void, JSONObject>() {
-                    @Override
-                    protected JSONObject doInBackground(String... tokens) {
-                        OkHttpClient client = new OkHttpClient();
-                        Request request = new Request.Builder()
-                                .url("https://people.googleapis.com/v1/people/me?personFields=names%2Cphotos") //Get name & profile pic
-                                .addHeader("Authorization", String.format("Bearer %s", tokens[0]))
-                                .build();
+        if (getAccountType() == "gmail"){
+        //profurl = "https://graph.microsoft.com/v1.0/me/";}
+            profurl = "https://people.googleapis.com/v1/people/me?personFields=names%2Cphotos";
+        }
+        else{
+            profurl = "https://apis.live.net/v5.0/me";
+        }
 
-                        try {
-                            Response response = client.newCall(request).execute();
-                            String jsonBody = response.body().string();
+            mAuthState.performActionWithFreshTokens(mAuthorizationService, new AuthState.AuthStateAction() {
 
+                @Override
+                public void execute(@Nullable String accessToken, @Nullable String idToken, @Nullable AuthorizationException exception) {
+                    new AsyncTask<String, Void, JSONObject>() {
+                        @Override
+                        protected JSONObject doInBackground(String... tokens) {
+                            OkHttpClient client = new OkHttpClient();
+                            Request request = new Request.Builder()
+                                    //.url("https://people.googleapis.com/v1/people/me?personFields=names%2Cphotos") //Get name & profile pic
+                                    //.url("https://graph.microsoft.com/v1.0/me/") //Get name & profile pic
+                                    .url(profurl) //Get name & profile pic
+                                    //.url("https://apis.live.net/v5.0/me") //Get name & profile pic
+                                    .addHeader("Authorization", String.format("Bearer %s", tokens[0]))
+                                    .build();
 
-                            return new JSONObject(jsonBody);
-                        } catch (Exception exception) {
-                            Log.w(LOG_TAG, exception);
-                        }
-                        return null;
-                    }
-
-                    @Override
-                    protected void onPostExecute(JSONObject userInfo) {
-                        if (userInfo != null) {
-                            String userMail = userInfo.optString("emailAddress");
-                            JSONArray usernames = null;
-                            String userdisplayname = "";
-                            JSONArray imageurls = null;
-                            String imageurl = "";
                             try {
-                                usernames = userInfo.getJSONArray("names");
-                                userdisplayname = usernames.getJSONObject(0).getString("displayName");
-                                imageurls = userInfo.getJSONArray("photos");
-                                imageurl = imageurls.getJSONObject(0).getString("url");
-                            } catch (JSONException e) {
-                                e.printStackTrace();
+                                Response response = client.newCall(request).execute();
+                                String jsonBody = response.body().string();
+
+
+                                return new JSONObject(jsonBody);
+                            } catch (Exception exception) {
+                                Log.w(LOG_TAG, exception);
                             }
-                            //userInfo.
-                            //Log.i(LOG_TAG, "User's Email: " + userMail + ", User name: " + userdisplayname + ", User Image: " + imageurl);
-                            if (!TextUtils.isEmpty(imageurl)) {
-                                Picasso.with(ctx)
-                                        .load(imageurl)
-                                        .fit()
-                                        //.placeholder(R.drawable.ic_account_circle_black_48dp)
-                                        .into(userProfPic);
-                            }
+                            return null;
+                        }
+
+                        @Override
+                        protected void onPostExecute(JSONObject userInfo) {
+                            if (userInfo != null) {
+
+                                if(getAccountType() == "gmail"){
+                                    Log.i(LOG_TAG, "userinfo JSON: " + userInfo.toString());
+
+                                    String userMail = userInfo.optString("emailAddress");
+                                    JSONArray usernames = null;
+                                    String userdisplayname = "";
+                                    JSONArray imageurls = null;
+                                    String imageurl = "";
+                                    try {
+                                        usernames = userInfo.getJSONArray("names");
+                                        userdisplayname = usernames.getJSONObject(0).getString("displayName");
+                                        imageurls = userInfo.getJSONArray("photos");
+                                        imageurl = imageurls.getJSONObject(0).getString("url");
+                                    } catch (JSONException e) {
+                                        e.printStackTrace();
+                                    }
+                                    //userInfo.
+                                    Log.i(LOG_TAG, "User's Email: " + userMail + ", User name: " + userdisplayname + ", User Image: " + imageurl);
+                                    if (!TextUtils.isEmpty(imageurl)) {
+                                        Picasso.with(ctx)
+                                                .load(imageurl)
+                                                .fit()
+                                                //.placeholder(R.drawable.ic_account_circle_black_48dp)
+                                                .into(userProfPic);
+                                    }
                             /*if (!TextUtils.isEmpty(userMail)) {
                                 mLoginActivity.userMail.setText(userMail);
                             }*/
-                            if (!TextUtils.isEmpty(userdisplayname)) {
-                                userDisplayName.setText(userdisplayname);
+                                    if (!TextUtils.isEmpty(userdisplayname)) {
+                                        userDisplayName.setText(userdisplayname);
+                                    }
+                                }
+                                else {
+                                    Log.i(LOG_TAG, "userinfo JSON: " + userInfo.toString());
+                                    String nameLive = null;
+                                    try {
+                                        nameLive = userInfo.getString("name");
+                                    } catch (JSONException e) {
+                                        e.printStackTrace();
+                                    }
+                                    if (!TextUtils.isEmpty(nameLive)) {
+                                        userDisplayName.setText(nameLive);
+                                    }
+                                }
+
+
                             }
                         }
-                    }
-                }.execute(accessToken);
-            }
-        });
+                    }.execute(accessToken);
+                }
+            });
 
     }
+
 
     //RETURN Account type
     private String getAccountType() {
