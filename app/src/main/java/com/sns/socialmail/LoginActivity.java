@@ -212,12 +212,15 @@ public class LoginActivity extends AppCompatActivity {
 
     //OUTLOOK LOGIN BUTTON LISTENER
     public void performAuthorizationOutlook (View v){
-        //String scp[] = {"https://graph.microsoft.com/User.Read", "https://graph.microsoft.com/Mail.ReadWrite"};
-        //String scp[] = {"openid","profile", "email", "wl.imap","wl.offline_access", "https://outlook.office.com/User.Read","https://outlook.office.com/Mail.ReadWrite","https://outlook.office.com/Mail.Send"};
-       String scp[] = {"openid", "profile", "email", "wl.imap", "wl.offline_access", "wl.emails"};
-       // String scp[] = {"wl.basic", "wl.imap","wl.offline_access", "wl.emails"};
+        //String scpo[] = {"openid", "https://graph.microsoft.com/User.Read", "https://graph.microsoft.com/Mail.ReadWrite"};
+        //String scpo[] = {"https://graph.microsoft.com/User.Read", "https://graph.microsoft.com/Mail.ReadWrite"};
+        //String scp[] = {"openid","profile", "email", "wl.imap", "wl.emails", "wl.offline_access", "https://outlook.office.com/User.Read","https://outlook.office.com/Mail.ReadWrite","https://outlook.office.com/Mail.Send"};
+       //
+        //String scpo[] = {"Mail.ReadWrite", "User.Read"};
+        //String scpo[] = {"openid", "profile"};
+        String scpo[] = {"wl.basic", "wl.imap", "wl.offline_access", "wl.emails"};
         //String scp[] = {"wl.imap","wl.offline_access"};
-        Iterable<String> scopesoutlook = Arrays.asList(scp);
+        Iterable<String> scopesoutlook = Arrays.asList(scpo);
 
         performAuthorizationTask(
                 v,
@@ -227,6 +230,7 @@ public class LoginActivity extends AppCompatActivity {
                 //"https://login.microsoftonline.com/common/oauth2/v2.0/token",
                 "https://login.live.com/oauth20_token.srf",
                 "b3a96c63-e850-4eac-9be7-77581148f182",
+                //"7b693a81-7362-492b-8c1c-9c5198550d54", //uceeawi
                 "com.sns.socialmail://oauth2callback",
                 scopesoutlook
         );
@@ -391,6 +395,7 @@ public class LoginActivity extends AppCompatActivity {
             profurl = "https://people.googleapis.com/v1/people/me?personFields=names%2Cphotos";
         }
         else{
+            //profurl = "https://graph.microsoft.com/v1.0/me/";
             profurl = "https://apis.live.net/v5.0/me";
         }
 
@@ -463,6 +468,7 @@ public class LoginActivity extends AppCompatActivity {
                                     String nameLive = null;
                                     try {
                                         nameLive = userInfo.getString("name");
+                                        //nameLive = userInfo.getJSONObject("emails").getString("account");
                                     } catch (JSONException e) {
                                         e.printStackTrace();
                                     }

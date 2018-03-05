@@ -129,10 +129,27 @@ public class PostMessageActivity extends AppCompatActivity {
                             @Override
                             protected void onPostExecute(JSONObject userInfo) {
                                 if (userInfo != null) {
-                                    senderMail = userInfo.optString("emailAddress");
-                                    Log.i(LOG_TAG, "Sender Email: " + senderMail);
-                                    if (senderMail != null){
-                                        sendEmail(); //EXECUTE SEND MAIL TASK After Getting User's Email address
+                                    //If GMAIL
+                                    if(getAccountType() == "gmail") {
+                                        senderMail = userInfo.optString("emailAddress");
+                                        Log.i(LOG_TAG, "Sender Email: " + senderMail);
+                                        if (senderMail != null) {
+                                            sendEmail("gmail"); //EXECUTE SEND MAIL TASK After Getting User's Email address
+                                        }
+                                    }
+                                    //IF MICROSOFT
+                                    else{
+                                        Log.i(LOG_TAG, "userinfo JSON: " + userInfo.toString());
+                                        try {
+                                            //nameLive = userInfo.getString("name");
+                                            senderMail = userInfo.getJSONObject("emails").getString("account");
+                                        } catch (JSONException e) {
+                                            e.printStackTrace();
+                                        }
+                                        if (senderMail != null) {
+                                            sendEmail("outlook"); //EXECUTE SEND MAIL TASK After Getting User's Email address
+                                        }
+
                                     }
                                 }
                             }
@@ -157,7 +174,7 @@ public class PostMessageActivity extends AppCompatActivity {
 
 
     //EXECUTE SEND MAIL TASK After Getting User's Email address
-    private void sendEmail() {
+    private void sendEmail(final String accType) {
         lAuthState.performActionWithFreshTokens(lAuthorizationService, new AuthState.AuthStateAction() {
             @Override
             public void execute(
@@ -172,10 +189,10 @@ public class PostMessageActivity extends AppCompatActivity {
 
                 if (attachmentType != null) {
                     new SendMailTask(PostMessageActivity.this).execute(senderMail,
-                            accessToken, toEmailList, "---POST " + attachmentType.toUpperCase(), emailBody, attachmentPath);
+                            accessToken, toEmailList, "---POST " + attachmentType.toUpperCase(), emailBody, attachmentPath, accType);
                 } else {
                     new SendMailTask(PostMessageActivity.this).execute(senderMail,
-                            accessToken, toEmailList, "---POST STATUS", emailBody, "null");
+                            accessToken, toEmailList, "---POST STATUS", emailBody, "null", accType);
                 }
             }
         });
